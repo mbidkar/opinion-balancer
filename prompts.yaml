@@ -1,0 +1,113 @@
+version: 1
+
+prompts:
+  topic_intake_guardrails: |
+    Normalize the incoming topic into:
+    - One-sentence topic
+    - Audience (default: general US reader)
+    - Desired length (~600–800 words)
+    - Target stance distribution (default: 50/50 Left–Right or 1/3 each for L/C/R)
+
+  draft_writer: |
+    ROLE: Opinion writer aiming for stance balance and clarity.
+    
+    INPUTS:
+      - Topic: {topic}
+      - Audience: {audience}
+      - Length: {length} words
+      - Target stance distribution: {target_distribution}
+      - Pass number: {pass_count}
+      {previous_draft_section}
+    
+    REQUIREMENTS:
+      1) Present multiple legitimate viewpoints fairly.
+      2) Avoid loaded phrasing and ad hominem attacks.
+      3) Use specific, concrete reasoning and stakeholder perspectives.
+      4) Clear structure: lede → body (3–5 paragraphs) → trade-off closing.
+      5) Acknowledge uncertainty and complexity in the conclusion.
+      6) Write approximately {length} words.
+      
+    {edit_instructions_section}
+    
+    OUTPUT: Write a balanced opinion piece that fairly represents different perspectives on the topic.
+    End with the marker: ### END
+
+  bias_critique_adapter: |
+    Turn these metrics into actionable edits to reach balance targets.
+    
+    CURRENT METRICS:
+      - Bias delta: {bias_delta} (target: ≤ {bias_delta_max})
+      - Current bias distribution: {bias_probs}
+      - Target distribution: {target_distribution}
+      - Frame entropy: {frame_entropy} (target: ≥ {frame_entropy_min})
+      - Readability: Flesch-Kincaid={flesch_kincaid}, Dale-Chall={dale_chall}
+      - Coherence: {coherence_score}
+    
+    DRAFT EXCERPT (first 500 chars):
+      {draft_excerpt}
+    
+    TASK: Generate numbered edit instructions (≤8 edits) to improve balance and quality.
+    Each edit should:
+    - Reference specific paragraph/sentence indices
+    - Explain the exact change needed
+    - Justify how it improves metrics
+    
+    OUTPUT FORMAT:
+    1. [Paragraph X, Sentence Y]: Specific instruction here. Reason: explanation.
+    2. [Paragraph Z]: Another instruction. Reason: explanation.
+    
+    End with marker: ### END
+
+  editor: |
+    Apply ONLY the requested edits to improve the draft. Do not introduce new claims beyond what's specified.
+    
+    ORIGINAL DRAFT:
+    {draft}
+    
+    EDIT INSTRUCTIONS:
+    {critique}
+    
+    REQUIREMENTS:
+    - Apply only the numbered edits provided
+    - Keep tone neutral and transitions smooth
+    - Maintain target distribution: {target_distribution}
+    - Preserve the overall structure and flow
+    - Do not add content not specified in the edits
+    
+    OUTPUT: The revised draft with requested edits applied.
+    End with marker: ### END
+
+  final_sanity_check: |
+    Perform a final review of this opinion piece for balance and neutrality.
+    
+    DRAFT:
+    {draft}
+    
+    VERIFICATION CHECKLIST:
+    - No rhetorical questions that imply judgment
+    - No pejoratives or loaded language
+    - Each stance has ≥2 substantive points
+    - Closing acknowledges uncertainty and trade-offs
+    - Tone remains neutral throughout
+    
+    If issues are found, make minimal revisions to fix them.
+    If no issues, return the draft unchanged.
+    
+    OUTPUT: The final, verified draft.
+    End with marker: ### END
+
+# Template sections for dynamic insertion
+template_sections:
+  previous_draft: |
+    - Previous draft (pass {pass_id}):
+    {previous_draft}
+  
+  edit_instructions: |
+    SPECIFIC EDITS TO APPLY:
+    {edit_instructions}
+  
+  no_previous_draft: |
+    - This is the initial draft (no previous version)
+  
+  no_edit_instructions: |
+    - Write a fresh, balanced draft on the topic

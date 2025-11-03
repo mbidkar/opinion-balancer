@@ -1,0 +1,34 @@
+version: 1
+
+run:
+  mode: kb_free
+  max_passes: 3
+  thresholds:
+    bias_delta_max: 0.05
+    frame_entropy_min: 0.6
+    readability_grade_min: 10
+    readability_grade_max: 13
+    coherence_min: 0.7
+
+logging:
+  out_dir: ./runs/{timestamp}
+  save_artifacts: true
+  log_level: INFO
+
+models:
+  provider: ollama
+  base_url: http://localhost:11434/v1
+  model: llama3.2:1b
+  temperatures:
+    writer: 0.7
+    critic: 0.4
+    editor: 0.3
+  max_tokens: 2048
+  
+# Default topic intake settings
+defaults:
+  audience: "general US reader"
+  length: 750
+  target_distribution:
+    Left: 0.5
+    Right: 0.5
