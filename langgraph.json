@@ -1,0 +1,7 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "opinion_balancer": "./graphs/kb_free.py:create_opinion_balancer_graph"
+  },
+  "env": ".env"
+}
