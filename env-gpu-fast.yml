@@ -1,0 +1,16 @@
+name: opinion-balancer-gpu
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - nvidia::cuda-toolkit==12.1.1
+  - pytorch::pytorch
+  - pytorch::torchvision  
+  - pytorch::torchaudio
+  - pytorch::pytorch-cuda=12.1
+  - pip
+  - pip:
+    - -r requirements-ordered.txt

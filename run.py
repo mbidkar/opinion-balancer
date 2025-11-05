@@ -173,18 +173,17 @@ def check_prerequisites() -> bool:
     
     print("🔍 Checking Prerequisites...")
     
-    # Check Ollama connection
+    # Check LLM connection (GPT-2 or Ollama)
     try:
         from llm_client import make_llm_client
         llm_client = make_llm_client()
         
         if not llm_client.test_connection():
-            print("❌ Cannot connect to Ollama")
-            print("   Make sure Ollama is running: ollama serve")
-            print("   And a model is available: ollama pull llama3.2:1b")
+            print("❌ Cannot connect to LLM")
+            print("   Check your model configuration in config.yaml")
             return False
         
-        print("✅ Ollama connection successful")
+        print("✅ LLM connection successful")
         
     except Exception as e:
         print(f"❌ LLM client error: {e}")

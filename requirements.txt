@@ -1,4 +1,4 @@
-# OpinionBalancer KB-Free Dependencies (Ollama Edition)
+# OpinionBalancer KB-Free Dependencies (GPT-2 Edition)
 
 # orchestrator
 langgraph>=0.2
@@ -8,8 +8,9 @@ pydantic>=2.7
 pyyaml>=6.0
 rich>=13.7
 
-# LLM client (OpenAI-compatible to Ollama)
-langchain-openai>=0.2
+# LLM client (Hugging Face Transformers)
+transformers>=4.35
+torch>=2.0
 
 # embeddings & metrics
 sentence-transformers>=2.7

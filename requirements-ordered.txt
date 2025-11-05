@@ -1,0 +1,38 @@
+# Basic dependencies first
+requests>=2.31
+urllib3
+certifi
+charset-normalizer
+idna
+
+# Core Python packages
+numpy>=1.26
+scipy>=1.12
+pandas>=2.2
+scikit-learn>=1.4
+joblib>=1.4
+
+# Utilities
+pyyaml>=6.0
+rich>=13.7
+click
+tqdm
+
+# ML/NLP core
+tokenizers
+huggingface-hub
+transformers>=4.35
+
+# NLP packages  
+nltk>=3.9
+textstat>=0.7
+sentence-transformers>=2.7
+
+# LangChain stack
+pydantic>=2.7
+langchain-core>=0.3
+langchain>=0.3
+langgraph>=0.2
+
+# Optional GPU acceleration
+accelerate

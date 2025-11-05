@@ -1,25 +1,55 @@
 """
 LLM Client for OpinionBalancer
-Ollama integration using OpenAI-compatible interface
+Supports both Ollama and GPT-2 backends
 """
 
 import yaml
 from typing import Dict, Any, Optional
-from langchain_openai import ChatOpenAI
-from langchain_core.messages import HumanMessage, SystemMessage
 
 
-class LLMClient:
+def make_llm_client(config_path: str = "config.yaml"):
+    """
+    Create LLM client based on configuration
+    
+    Args:
+        config_path: Path to config file
+        
+    Returns:
+        LLMClient instance (Ollama or GPT-2)
+    """
+    with open(config_path, 'r') as f:
+        config = yaml.safe_load(f)
+    
+    provider = config.get('models', {}).get('provider', 'ollama')
+    
+    if provider == 'gpt2':
+        from llm_client_gpt2 import GPT2LLMClient
+        model_path = config['models'].get('model_path')
+        device = config['models'].get('device', 'auto')
+        return GPT2LLMClient(model_path=model_path, device=device)
+    else:
+        # Fallback to Ollama client
+        return OllamaLLMClient(config_path)
+
+
+class OllamaLLMClient:
     """Ollama client using OpenAI-compatible interface"""
     
     def __init__(self, config_path: str = "config.yaml"):
+        from langchain_openai import ChatOpenAI
+        from langchain_core.messages import HumanMessage, SystemMessage
+        
+        self.ChatOpenAI = ChatOpenAI
+        self.HumanMessage = HumanMessage
+        self.SystemMessage = SystemMessage
+        
         with open(config_path, 'r') as f:
             self.config = yaml.safe_load(f)
         
         self.models_config = self.config['models']
         self._clients = {}
     
-    def _get_client(self, role: str, temperature: Optional[float] = None) -> ChatOpenAI:
+    def _get_client(self, role: str, temperature: Optional[float] = None):
         """Get or create LLM client for specific role"""
         if temperature is None:
             temperature = self.models_config['temperatures'].get(role, 0.5)
@@ -27,13 +57,11 @@ class LLMClient:
         client_key = f"{role}_{temperature}"
         
         if client_key not in self._clients:
-            self._clients[client_key] = ChatOpenAI(
+            self._clients[client_key] = self.ChatOpenAI(
                 base_url=self.models_config['base_url'],
-                api_key="ollama",  # dummy key for local Ollama
                 model=self.models_config['model'],
                 temperature=temperature,
-                max_tokens=self.models_config.get('max_tokens', 2048),
-                stop=["### END"]  # Stop at end marker
+                max_tokens=self.models_config['max_tokens']
             )
         
         return self._clients[client_key]
@@ -48,8 +76,8 @@ class LLMClient:
         
         messages = []
         if system_message:
-            messages.append(SystemMessage(content=system_message))
-        messages.append(HumanMessage(content=prompt))
+            messages.append(self.SystemMessage(content=system_message))
+        messages.append(self.HumanMessage(content=prompt))
         
         try:
             response = client.invoke(messages)
@@ -77,13 +105,4 @@ class LLMClient:
             return False
 
 
-def make_llm_client(config_path: str = "config.yaml") -> LLMClient:
-    """Factory function to create LLM client"""
-    return LLMClient(config_path)
-
-
-# For backward compatibility with blueprint examples
-def make_llm(role: str, temperature: float, config_path: str = "config.yaml") -> ChatOpenAI:
-    """Create individual LLM client (legacy interface)"""
-    client = LLMClient(config_path)
-    return client._get_client(role, temperature)
+# Legacy functions - now handled by the factory function above
