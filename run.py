@@ -26,12 +26,6 @@ Examples:
   # Basic usage
   python run.py --topic "Universal basic income in the US"
   
-  # With custom parameters
-  python run.py --topic "Climate change policy" \\
-                --audience "policymakers" \\
-                --length 800 \\
-                --target "Left=0.4,Center=0.2,Right=0.4"
-  
   # Test mode
   python run.py --test
         """
@@ -44,62 +38,7 @@ Examples:
         help='Opinion topic to write about'
     )
     
-    parser.add_argument(
-        '--audience',
-        type=str,
-        default='general US reader',
-        help='Target audience (default: "general US reader")'
-    )
-    
-    parser.add_argument(
-        '--length',
-        type=int,
-        default=750,
-        help='Target word count (default: 750)'
-    )
-    
-    parser.add_argument(
-        '--target',
-        type=str,
-        default='Left=0.5,Right=0.5',
-        help='Target stance distribution (default: "Left=0.5,Right=0.5")'
-    )
-    
-    # Configuration overrides
-    parser.add_argument(
-        '--max-passes',
-        type=int,
-        default=3,
-        help='Maximum refinement passes (default: 3)'
-    )
-    
-    parser.add_argument(
-        '--bias-threshold',
-        type=float,
-        default=0.05,
-        help='Maximum allowed bias delta (default: 0.05)'
-    )
-    
-    parser.add_argument(
-        '--frame-threshold',
-        type=float,
-        default=0.6,
-        help='Minimum frame entropy (default: 0.6)'
-    )
-    
-    parser.add_argument(
-        '--grade-min',
-        type=int,
-        default=10,
-        help='Minimum reading grade level (default: 10)'
-    )
-    
-    parser.add_argument(
-        '--grade-max',
-        type=int,
-        default=13,
-        help='Maximum reading grade level (default: 13)'
-    )
+    # Fixed configuration - no customization allowed
     
     # System options
     parser.add_argument(
@@ -132,37 +71,6 @@ def validate_arguments(args) -> bool:
     
     if not args.topic:
         print("❌ Error: --topic is required (unless using --test)")
-        return False
-    
-    if args.length < 100 or args.length > 2000:
-        print("❌ Error: --length must be between 100 and 2000 words")
-        return False
-    
-    if args.max_passes < 1 or args.max_passes > 10:
-        print("❌ Error: --max-passes must be between 1 and 10")
-        return False
-    
-    if args.bias_threshold < 0 or args.bias_threshold > 1:
-        print("❌ Error: --bias-threshold must be between 0 and 1")
-        return False
-    
-    if args.frame_threshold < 0 or args.frame_threshold > 5:
-        print("❌ Error: --frame-threshold must be between 0 and 5")
-        return False
-    
-    if args.grade_min < 1 or args.grade_max > 20 or args.grade_min >= args.grade_max:
-        print("❌ Error: Invalid grade level range")
-        return False
-    
-    # Validate target distribution
-    try:
-        target_dist = parse_target_distribution(args.target)
-        total = sum(target_dist.values())
-        if abs(total - 1.0) > 0.01:  # Allow small floating point errors
-            print(f"❌ Error: Target distribution must sum to 1.0 (got {total:.3f})")
-            return False
-    except Exception as e:
-        print(f"❌ Error: Invalid target distribution format: {e}")
         return False
     
     return True
@@ -203,20 +111,18 @@ def check_prerequisites() -> bool:
     return True
 
 
-def create_config_overrides(args) -> Dict[str, Any]:
-    """Create configuration overrides from arguments"""
+def get_fixed_config() -> Dict[str, Any]:
+    """Return fixed configuration settings"""
     
-    overrides = {
-        'constraints': {
-            'max_passes': args.max_passes,
-            'bias_delta_max': args.bias_threshold,
-            'frame_entropy_min': args.frame_threshold,
-            'grade_min': args.grade_min,
-            'grade_max': args.grade_max
-        }
+    return {
+        'audience': 'general US reader',
+        'length': 500,  # Fixed at 500 words maximum
+        'target_distribution': {'Left': 0.5, 'Right': 0.5},
+        'bias_delta_max': 0.05,
+        'frame_entropy_min': 0.6,
+        'grade_min': 10,
+        'grade_max': 13
     }
-    
-    return overrides
 
 
 def run_test_mode():
@@ -249,27 +155,24 @@ def run_production_mode(args):
     print("🚀 OpinionBalancer Production Mode")
     print("=" * 50)
     
-    # Parse target distribution
-    target_distribution = parse_target_distribution(args.target)
-    
-    # Create config overrides
-    config_overrides = create_config_overrides(args)
+    # Get fixed configuration
+    config = get_fixed_config()
     
     print(f"📝 Topic: {args.topic}")
-    print(f"👥 Audience: {args.audience}")
-    print(f"📏 Length: {args.length} words")
-    print(f"🎯 Target: {target_distribution}")
-    print(f"⚙️  Max passes: {args.max_passes}")
+    print(f"👥 Audience: {config['audience']}")
+    print(f"📏 Length: {config['length']} words (max)")
+    print(f"🎯 Target: {config['target_distribution']}")
+    print(f"⚙️  Workflow: Single-pass linear execution")
     print()
     
     try:
         # Run the workflow
         final_state = run_opinion_balancer(
             topic=args.topic,
-            audience=args.audience,
-            length=args.length,
-            target_distribution=target_distribution,
-            config_overrides=config_overrides
+            audience=config['audience'],
+            length=config['length'],
+            target_distribution=config['target_distribution'],
+            config_overrides=config
         )
         
         if final_state and final_state.draft:

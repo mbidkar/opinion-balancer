@@ -2,7 +2,7 @@
 
 **A local, multi-agent writing system for balanced opinion pieces**
 
-OpinionBalancer is a KB-free, deterministic system built with LangGraph that automatically drafts and refines balanced opinion pieces using local LLMs via Ollama. No external APIs, knowledge bases, or internet connection required.
+OpinionBalancer is a KB-free, deterministic system built with LangGraph that automatically drafts and refines balanced opinion pieces using GPT-2. Designed to run locally on PACE-ICE cluster or personal machines with minimal dependencies.
 
 ## 🎯 What It Does
 
@@ -12,47 +12,59 @@ The system takes a topic and produces balanced opinion articles through a struct
 2. **Draft Writing** → Generate initial opinion piece
 3. **Multi-Metric Evaluation** → Assess bias, framing, readability, coherence
 4. **Critique Synthesis** → Generate targeted edit instructions
-5. **Editing** → Apply improvements
-6. **Convergence Check** → Repeat until quality thresholds met
+5. **Editing** → Apply improvements (single pass)
+6. **Logging** → Save results and metrics
 
 ## 🔧 Key Features
 
-- **🏠 100% Local**: Runs entirely on your machine using Ollama
+- **🏠 100% Local**: Runs entirely locally using GPT-2 (355M parameter model)
 - **⚖️ Bias Detection**: Quantifies and balances political stance
 - **🖼️ Frame Diversity**: Ensures multiple perspective types (moral, economic, policy, etc.)
 - **📖 Readability Control**: Targets specific grade levels (10-13)
 - **🔗 Coherence Scoring**: Maintains logical flow between paragraphs
 - **📊 Deterministic Metrics**: All evaluations are measurable and reproducible
-- **🚫 No External Dependencies**: No APIs, knowledge bases, or internet required
+- **�️ PACE-ICE Ready**: Optimized for Georgia Tech's computing cluster
+- **🚫 No External APIs**: No internet or external services required
 
 ## 🚀 Quick Start
 
-### 1. Prerequisites
+### 1. PACE-ICE Setup
 
 ```bash
-# Install Ollama
-brew install ollama
+# Clone repository
+git clone https://github.com/mbidkar/opinion-balancer.git
+cd opinion-balancer
 
-# Start Ollama and pull model
-ollama serve
-ollama pull llama3.2:1b
+# Run setup script
+chmod +x setup.sh
+./setup.sh
 
-# Install Python dependencies
-pip install -r requirements.txt
+# Activate environment
+source activate.sh
 ```
 
-### 2. Basic Usage
+### 2. Local Setup
 
 ```bash
-# Simple opinion piece
-python run.py --topic "Universal basic income in the US"
+# Create environment
+conda env create -f environment.yml
+conda activate opinion-balancer
 
-# Custom parameters
-python run.py \
-  --topic "Climate change policy options" \
-  --audience "policymakers" \
-  --length 800 \
-  --target "Left=0.4,Center=0.2,Right=0.4"
+# Test installation
+python test_gpt2.py
+```
+
+### 3. Basic Usage
+
+```bash
+# Test GPT-2 client
+python test_gpt2.py
+
+# Start LangGraph development server
+langgraph dev
+
+# Run opinion analysis
+python run.py --topic "Universal basic income in the US"
 
 # Test system components
 python run.py --test
@@ -78,36 +90,95 @@ python run.py --test
 ## 🎛️ Usage Examples
 
 ```bash
-# Basic run
+# Basic run (500 word max, Left=0.5/Right=0.5 target)
 python run.py --topic "Universal basic income in the US"
 
 # Test components
 python run.py --test
 
-# Custom configuration  
-python run.py --topic "Climate policy" --length 800 --target "Left=0.4,Right=0.6"
+# Start development server
+langgraph dev
 ```
 
-*Complete documentation and examples available in the full README.md*
+## ⚙️ Fixed Configuration
 
-A new project for balancing opinions.
+OpinionBalancer uses fixed settings to ensure consistent results:
+- **Length**: Maximum 500 words
+- **Target Balance**: 50% Left, 50% Right 
+- **Audience**: General US reader
+- **Workflow**: Single-pass linear execution (no loops)
+- **Grade Level**: 10-13 (high school to college)
 
-## Getting Started
+## 🏗️ System Architecture
 
-This repository was just created. Add your project description and setup instructions here.
+### Core Components
 
-## Features
+1. **LLM Client** (`llm_client_gpt2.py`) - GPT-2 interface with GPU/CPU auto-detection
+2. **State Management** (`state.py`) - Pydantic models for workflow state
+3. **LangGraph Workflow** (`graphs/kb_free.py`) - Multi-agent orchestration
+4. **Evaluation Nodes** (`nodes/`) - Bias, frame, readability, coherence analysis
+5. **Generation Nodes** (`nodes/`) - Draft writing, editing, critique synthesis
 
-- Add your features here
+### Model Configuration
 
-## Installation
+- **Model**: GPT-2 Medium (355M parameters)
+- **Location**: `/storage/data/mod-huggingface-0/gpt2-medium` (PACE-ICE)
+- **Fallback**: Online GPT-2 via Hugging Face Hub
+- **Device**: Auto-detection (CUDA if available, else CPU)
 
-- Add installation instructions here
+## 📁 Files Overview
 
-## Usage
+```
+opinion-balancer/
+├── setup.sh              # Main setup script for PACE-ICE
+├── activate.sh            # Environment activation helper
+├── environment.yml        # Conda environment specification
+├── requirements-simple.txt # Python package dependencies
+├── test_gpt2.py          # GPT-2 client test script
+├── llm_client_gpt2.py    # GPT-2 LLM client implementation
+├── langgraph.json        # LangGraph configuration
+├── run.py                # Main CLI interface
+├── state.py              # Pydantic state models
+├── config.yaml           # System configuration
+├── prompts.yaml          # LLM prompts
+├── graphs/
+│   └── kb_free.py        # LangGraph workflow definition
+└── nodes/                # Individual processing nodes
+    ├── evaluators/       # Bias, frame, readability evaluators
+    └── generators/       # Draft, edit, critique generators
+```
 
-- Add usage instructions here
+## 🧪 Testing
 
-## Contributing
+```bash
+# Test GPT-2 client
+python test_gpt2.py
 
-- Add contributing guidelines here
+# Test LangGraph setup
+langgraph dev
+
+# Test full pipeline
+python run.py --test
+```
+
+## 🔧 Configuration
+
+Edit `config.yaml` to customize:
+- Model paths and parameters
+- Evaluation thresholds
+- Target bias distributions
+- Output formatting
+
+## 📈 Development
+
+1. Use `langgraph dev` for interactive development
+2. Monitor with LangSmith (optional, set `LANGSMITH_API_KEY`)
+3. Test individual nodes in `nodes/` directory
+4. Modify prompts in `prompts.yaml`
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Test on PACE-ICE environment
+4. Submit a pull request

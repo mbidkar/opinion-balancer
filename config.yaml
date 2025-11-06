@@ -28,7 +28,7 @@ models:
 # Default topic intake settings
 defaults:
   audience: "general US reader"
-  length: 750
+  length: 500  # Maximum 500 words
   target_distribution:
     Left: 0.5
     Right: 0.5
