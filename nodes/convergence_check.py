@@ -56,37 +56,43 @@ def check_thresholds(metrics: Metrics, constraints: dict) -> dict:
     }
 
 
-def convergence_check(state: GraphState) -> str:
+def convergence_check(state: GraphState) -> GraphState:
     """
-    Check convergence criteria and decide next action
+    Check convergence criteria and update state with decision
     
     Args:
         state: Current graph state with metrics and history
         
     Returns:
-        "END" to stop processing, "draft_writer" to continue iteration
+        Updated state with convergence decision set
     """
     try:
         print("🎯 Convergence Check")
         print("=" * 40)
         
+        # Initialize convergence flag if not present
+        if not hasattr(state, 'converged'):
+            state.converged = False
+        
         # Check pass limit
         max_passes = state.constraints.get('max_passes', 3)
-        print(f"Pass {state.pass_count + 1} of {max_passes}")
+        print(f"Pass {state.pass_count} of {max_passes}")
         
         if state.pass_count >= max_passes:
             print(f"🛑 Maximum passes ({max_passes}) reached")
             state.converged = True
-            return "END"
+            return state
         
         # Check if we have metrics to evaluate
         if not state.metrics:
             if state.pass_count == 0:
                 print("▶️  First pass - continuing to evaluation")
-                return "draft_writer"
+                state.converged = False
+                return state
             else:
                 print("❌ No metrics available - stopping")
-                return "END"
+                state.converged = True
+                return state
         
         # Evaluate thresholds
         threshold_results = check_thresholds(state.metrics, state.constraints)
@@ -106,12 +112,12 @@ def convergence_check(state: GraphState) -> str:
         if threshold_results['all_met']:
             print("🎉 All thresholds met - converged!")
             state.converged = True
-            return "END"
+            return state
         
         if threshold_results['critical_met'] and state.pass_count >= 2:
             print("✅ Critical thresholds met after 2+ passes - acceptable quality")
             state.converged = True
-            return "END"
+            return state
         
         # Check for improvement plateau
         if len(state.history) >= 2:
@@ -119,16 +125,24 @@ def convergence_check(state: GraphState) -> str:
             if improvement['plateau'] and state.pass_count >= 2:
                 print("📈 Improvement plateau detected - stopping to avoid overprocessing")
                 state.converged = True
-                return "END"
+                return state
+        
+        # Check emergency stop conditions
+        if should_force_stop(state):
+            print("⛔ Emergency stop condition met")
+            state.converged = True
+            return state
         
         # Continue iteration
         print("▶️  Continuing refinement")
-        return "draft_writer"
+        state.converged = False
+        return state
         
     except Exception as e:
         print(f"❌ Error in convergence check: {e}")
         # Default to stopping on error
-        return "END"
+        state.converged = True
+        return state
 
 
 def analyze_improvement_trend(recent_history: list) -> dict:

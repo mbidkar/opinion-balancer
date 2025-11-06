@@ -18,6 +18,16 @@ def load_prompts(config_path: str = "prompts.yaml") -> dict:
         return {}
 
 
+def load_config(config_path: str = "config.yaml") -> dict:
+    """Load configuration settings"""
+    try:
+        with open(config_path, 'r') as f:
+            return yaml.safe_load(f)
+    except Exception as e:
+        print(f"Warning: Could not load config from {config_path}: {e}")
+        return {}
+
+
 def format_critique_prompt(state: GraphState, prompts: dict) -> str:
     """Format the critique prompt with current metrics"""
     if not state.metrics:
@@ -91,9 +101,17 @@ def critique_synth(state: GraphState) -> GraphState:
             state.critique = "No draft available to critique."
             return state
         
-        # Load prompts and LLM client
+        # Load prompts and config
         prompts = load_prompts()
-        llm_client = OpenAILLMClient(model="gpt-5", temperature=0.6, max_completion_tokens=1000)
+        config = load_config()
+        
+        # Get model settings from config
+        model_config = config.get('openai', {})
+        model_name = model_config.get('model', 'gpt-4')
+        temperature = 0.6
+        max_tokens = 1000
+        
+        llm_client = OpenAILLMClient(model=model_name, temperature=temperature, max_completion_tokens=max_tokens)
         
         # Test LLM connection
         if not llm_client.test_connection():

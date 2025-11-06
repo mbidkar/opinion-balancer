@@ -1,38 +1,114 @@
-# OpinionBalancer Dependencies (OpenAI Edition)
-# Clean, minimal installation for OpenAI API usage
+# OpinionBalancer Dependencies (Complete Edition)
+# All necessary packages and dependencies for the OpinionBalancer project
+# Updated for GPT-5 nano with OpenAI API
 
-# Core Python packages
-requests>=2.31
-pyyaml>=6.0
-click>=8.1
-python-dotenv>=1.0
+# ======================================================================
+# CORE PYTHON PACKAGES
+# ======================================================================
+# Command line interface
+argparse  # Built-in, but listed for completeness
+click>=8.1.0
 
-# Data handling
-pandas>=2.0
-textstat>=0.7
-nltk>=3.8
-numpy>=1.24
-scipy>=1.10
-scikit-learn>=1.3
+# Configuration and environment
+pyyaml>=6.0.0
+python-dotenv>=1.0.0
 
-# OpenAI API
-openai>=1.0
+# HTTP requests and utilities
+requests>=2.31.0
 
-# Additional ML packages (lightweight)
-sentence-transformers>=2.2
-joblib>=1.3
+# ======================================================================
+# DATA PROCESSING & ANALYSIS
+# ======================================================================
+# Core data handling
+numpy>=1.24.0,<2.0.0
+pandas>=2.0.0,<3.0.0
+scipy>=1.10.0
 
-# Pydantic and dependencies
-typing-extensions>=4.5
-pydantic>=2.5
-pydantic-core>=2.10
+# Text analysis and natural language processing
+textstat>=0.7.0          # Readability metrics (Flesch-Kincaid, Dale-Chall)
+nltk>=3.8.0             # Natural language processing utilities
 
-# LangChain stack
-langchain-core>=0.1
-langchain>=0.1
-langgraph>=0.1
-langchain-openai>=0.1
+# Machine learning and embeddings
+scikit-learn>=1.3.0,<2.0.0     # Cosine similarity, ML utilities
+sentence-transformers>=2.2.0    # Sentence embeddings for coherence analysis
+joblib>=1.3.0                   # Serialization and parallel processing
 
-# Development tools
-rich>=13.0
-langgraph-cli>=0.1
+# ======================================================================
+# AI/ML API INTEGRATION
+# ======================================================================
+# OpenAI API (primary LLM provider)
+openai>=1.0.0
+
+# ======================================================================
+# WORKFLOW AND ORCHESTRATION
+# ======================================================================
+# LangGraph workflow framework and development server
+langgraph>=0.2.0
+langgraph-cli>=0.1.0
+
+# LangChain core components
+langchain>=0.1.0
+langchain-core>=0.1.0
+langchain-openai>=0.1.0
+
+# Web server dependencies for langgraph dev
+uvicorn>=0.23.0            # ASGI server for running the dev server
+fastapi>=0.100.0           # Web framework used by LangGraph API server
+websockets>=11.0.0         # WebSocket support for real-time updates
+
+# ======================================================================
+# DATA VALIDATION AND TYPE SAFETY
+# ======================================================================
+# Pydantic for data models and validation
+pydantic>=2.5.0,<3.0.0
+pydantic-core>=2.10.0
+typing-extensions>=4.5.0
+
+# ======================================================================
+# DEVELOPMENT AND UTILITIES
+# ======================================================================
+# Rich console output for better UX
+rich>=13.0.0
+
+# Debugging support for langgraph dev --debug-port
+debugpy>=1.6.0            # Remote debugging support (optional but recommended)
+
+# File I/O and data persistence
+# csv, json, os, datetime are built-in modules
+
+# ======================================================================
+# OPTIONAL: LEGACY SUPPORT (Comment out if not using GPT-2)
+# ======================================================================
+# Uncomment these if you want to keep GPT-2 support alongside OpenAI
+# torch>=2.0.0
+# transformers>=4.30.0
+
+# ======================================================================
+# INSTALLATION NOTES
+# ======================================================================
+# To install all dependencies:
+#   pip install -r requirements-simple.txt
+#
+# For development with additional tools:
+#   pip install -r requirements-simple.txt pytest black flake8
+#
+# For Jupyter notebook support:
+#   pip install -r requirements-simple.txt jupyter
+#
+# To run the LangGraph development server:
+#   langgraph dev --port 8000
+#   # Opens API server with hot reloading and debugging support
+#   # Access LangGraph Studio at the provided URL
+#
+# For remote debugging with LangGraph dev:
+#   langgraph dev --debug-port 5678 --wait-for-client
+#
+# Required environment variables in .env:
+#   OPENAI_API_KEY=your-openai-api-key
+#   LANGSMITH_API_KEY=your-langsmith-key (optional)
+#   LANGSMITH_TRACING=true (optional)
+#
+# Project structure requirements for langgraph dev:
+#   - langgraph.json configuration file ✅
+#   - Graph definition in ./graphs/kb_free.py ✅  
+#   - Environment variables in .env ✅

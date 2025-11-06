@@ -17,7 +17,7 @@ logging:
 
 models:
   provider: openai
-  model: gpt-5
+  model: gpt-4o-mini
   temperatures:
     writer: 0.8
     critic: 0.6

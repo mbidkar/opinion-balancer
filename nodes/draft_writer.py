@@ -71,9 +71,24 @@ def draft_writer(state: GraphState) -> GraphState:
         print(f"✍️  Draft Writer (Pass {state.pass_count + 1})")
         print("=" * 40)
         
-        # Load prompts and LLM client
+        # Load prompts and configuration
         prompts = load_prompts()
-        llm_client = OpenAILLMClient(model="gpt-5", temperature=0.8, max_completion_tokens=1000)
+        
+        # Load model configuration from config.yaml
+        try:
+            with open("config.yaml", 'r') as f:
+                config = yaml.safe_load(f)
+            model_config = config.get('models', {})
+            model_name = model_config.get('model', 'gpt-5-nano')
+            temperature = model_config.get('temperatures', {}).get('writer', 0.8)
+            max_tokens = model_config.get('max_completion_tokens', 1000)
+        except:
+            # Fallback defaults
+            model_name = 'gpt-5-nano'
+            temperature = 0.8
+            max_tokens = 1000
+        
+        llm_client = OpenAILLMClient(model=model_name, temperature=temperature, max_completion_tokens=max_tokens)
         
         # Test LLM connection
         if not llm_client.test_connection():
@@ -92,6 +107,10 @@ def draft_writer(state: GraphState) -> GraphState:
             prompt=prompt,
             system_message="You are an expert opinion writer focused on balanced, fair reporting."
         )
+        
+        print(f"🔍 Generated draft length: {len(draft.strip()) if draft else 0} characters")
+        if draft:
+            print(f"🔍 Draft preview: {draft[:200]}...")
         
         if not draft or len(draft.strip()) < 100:
             print("❌ Generated draft too short, using fallback")

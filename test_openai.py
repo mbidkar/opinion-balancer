@@ -32,7 +32,7 @@ def test_openai_connection():
         
         # Initialize client
         print("\n📦 Initializing OpenAI client...")
-        client = OpenAILLMClient(model="gpt-5", temperature=0.7, max_completion_tokens=1000)
+        client = OpenAILLMClient(model="gpt-5-nano", temperature=0.7, max_completion_tokens=1000)
         
         # Test connection
         print("🔗 Testing API connection...")

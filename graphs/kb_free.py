@@ -10,22 +10,22 @@ from langgraph.graph.state import CompiledStateGraph
 from state import GraphState
 from nodes import (
     topic_intake, draft_writer, bias_score, frame_entropy,
-    readability, coherence, critique_synth, editor, logger
+    readability, coherence, critique_synth, editor, convergence_check, logger
 )
 
 
 def create_opinion_balancer_graph() -> CompiledStateGraph:
     """
-    Create the complete OpinionBalancer workflow graph
+    Create the complete OpinionBalancer workflow graph with iterative refinement
     
     Returns:
-        Compiled LangGraph ready for execution
+        Compiled LangGraph ready for execution with convergence loops
     """
     
     # Create the state graph
     graph = StateGraph(GraphState)
     
-    # Add all nodes (linear flow, no convergence checking)
+    # Add all nodes
     graph.add_node("topic_intake", topic_intake)
     graph.add_node("draft_writer", draft_writer)
     graph.add_node("bias_score", bias_score)
@@ -34,23 +34,43 @@ def create_opinion_balancer_graph() -> CompiledStateGraph:
     graph.add_node("coherence", coherence)
     graph.add_node("critique_synth", critique_synth)
     graph.add_node("editor", editor)
+    graph.add_node("convergence_check", convergence_check)
     graph.add_node("logger", logger)
+    
+    # Add coordination node for metrics evaluation
+    graph.add_node("evaluate_all", evaluate_all_metrics)
+    
+    # Add pass increment node
+    graph.add_node("increment_pass", increment_pass_counter)
     
     # Set entry point
     graph.set_entry_point("topic_intake")
     
-    # Linear flow: intake → draft_writer
+    # Initial flow: intake → draft_writer → evaluate metrics
     graph.add_edge("topic_intake", "draft_writer")
-    
-    # Fan-out: draft_writer → all evaluators
-    # Note: In LangGraph, we need to create a coordination node for parallel execution
-    graph.add_node("evaluate_all", evaluate_all_metrics)
     graph.add_edge("draft_writer", "evaluate_all")
     
-    # Linear flow: evaluation → critique → editor → logger → END
+    # After evaluation, synthesize critique and edit
     graph.add_edge("evaluate_all", "critique_synth")
     graph.add_edge("critique_synth", "editor")
-    graph.add_edge("editor", "logger")
+    
+    # After editing, increment pass counter
+    graph.add_edge("editor", "increment_pass")
+    
+    # Check convergence after each pass
+    graph.add_edge("increment_pass", "convergence_check")
+    
+    # Conditional routing based on convergence decision
+    graph.add_conditional_edges(
+        "convergence_check",
+        route_convergence_decision,
+        {
+            "continue": "evaluate_all",  # Loop back to re-evaluate metrics
+            "end": "logger"              # Finish and log results
+        }
+    )
+    
+    # Final logging and end
     graph.add_edge("logger", END)
     
     # Compile the graph
@@ -87,6 +107,73 @@ def evaluate_all_metrics(state: GraphState) -> GraphState:
         return state
 
 
+def increment_pass_counter(state: GraphState) -> GraphState:
+    """
+    Increment the pass counter and update history
+    
+    Args:
+        state: Current graph state
+        
+    Returns:
+        State with incremented pass counter and updated history
+    """
+    try:
+        # Increment pass counter
+        state.pass_count += 1
+        
+        # Create a pass log entry
+        from state import PassLog
+        from datetime import datetime
+        
+        # Only create pass log if we have metrics
+        if state.metrics:
+            pass_log = PassLog(
+                pass_id=state.pass_count,
+                draft=state.draft if state.draft else "",
+                critique=state.critique if state.critique else "",
+                metrics=state.metrics.model_copy(),
+                timestamp=datetime.now()
+            )
+            
+            # Add to history
+            if state.history is None:
+                state.history = []
+            state.history.append(pass_log)
+        
+        print(f"📈 Pass {state.pass_count} completed")
+        
+        return state
+        
+    except Exception as e:
+        print(f"❌ Error incrementing pass counter: {e}")
+        return state
+
+
+def route_convergence_decision(state: GraphState) -> str:
+    """
+    Route based on convergence check decision
+    
+    Args:
+        state: Current graph state with convergence decision
+        
+    Returns:
+        Next node name: "continue" or "end"
+    """
+    try:
+        # The convergence_check node should have set the convergence status
+        if hasattr(state, 'converged') and state.converged:
+            print("🎯 Convergence achieved - ending refinement")
+            return "end"
+        else:
+            print("🔄 Continuing refinement loop")
+            return "continue"
+            
+    except Exception as e:
+        print(f"❌ Error in routing decision: {e}")
+        # Default to ending on error to prevent infinite loops
+        return "end"
+
+
 # Removed routing function - using linear flow only
 
 
@@ -98,7 +185,7 @@ def run_opinion_balancer(
     config_overrides: Dict[str, Any] = None
 ) -> GraphState:
     """
-    Run the complete opinion balancing workflow (single pass, no loops)
+    Run the complete opinion balancing workflow with iterative refinement
     
     Args:
         topic: The opinion topic to write about
@@ -111,11 +198,45 @@ def run_opinion_balancer(
         Final GraphState with balanced opinion piece
     """
     
+    # Load configuration for constraints
+    import yaml
+    import os
+    
+    config_path = os.path.join(os.path.dirname(__file__), '..', 'config.yaml')
+    try:
+        with open(config_path, 'r') as f:
+            config = yaml.safe_load(f)
+    except:
+        # Fallback to default config
+        config = {
+            'run': {
+                'max_passes': 3,
+                'thresholds': {
+                    'bias_delta_max': 0.05,
+                    'frame_entropy_min': 0.6,
+                    'readability_grade_min': 10,
+                    'readability_grade_max': 13,
+                    'coherence_min': 0.7
+                }
+            }
+        }
+    
+    # Extract constraints from config
+    constraints = config.get('run', {}).get('thresholds', {})
+    constraints['max_passes'] = config.get('run', {}).get('max_passes', 3)
+    
+    # Apply any config overrides
+    if config_overrides:
+        constraints.update(config_overrides)
+    
     # Create initial state
     initial_state = GraphState(
         topic=topic,
         audience=audience,
-        length=length
+        length=length,
+        constraints=constraints,
+        pass_count=0,
+        converged=False
     )
     
     # Set target distribution
@@ -124,13 +245,13 @@ def run_opinion_balancer(
     else:
         initial_state.target_distribution = {"Left": 0.5, "Right": 0.5}
     
-    # Note: config_overrides kept for compatibility but not used in linear flow
-    
     # Create and run the graph
     graph = create_opinion_balancer_graph()
     
-    print("🚀 Starting OpinionBalancer Workflow")
-    print("=" * 50)
+    print("🚀 Starting OpinionBalancer Workflow with Iterative Refinement")
+    print(f"📋 Max passes: {constraints.get('max_passes', 3)}")
+    print(f"🎯 Target: {target_distribution or {'Left': 0.5, 'Right': 0.5}}")
+    print("=" * 60)
     
     try:
         # Execute the workflow
@@ -143,7 +264,10 @@ def run_opinion_balancer(
         else:
             final_state = result
         
-        print("\n🎉 OpinionBalancer Complete!")
+        print(f"\n🎉 OpinionBalancer Complete!")
+        print(f"📊 Final pass count: {final_state.pass_count}")
+        print(f"✅ Converged: {final_state.converged}")
+        
         return final_state
         
     except Exception as e:
@@ -154,10 +278,10 @@ def run_opinion_balancer(
 
 def create_simple_test_graph() -> CompiledStateGraph:
     """
-    Create a simplified graph for testing individual components
+    Create a simplified graph for testing individual components (with convergence)
     
     Returns:
-        Simplified graph for debugging
+        Simplified graph for debugging with convergence loop
     """
     graph = StateGraph(GraphState)
     
@@ -165,13 +289,27 @@ def create_simple_test_graph() -> CompiledStateGraph:
     graph.add_node("topic_intake", topic_intake)
     graph.add_node("draft_writer", draft_writer)
     graph.add_node("evaluate_all", evaluate_all_metrics)
+    graph.add_node("convergence_check", convergence_check)
+    graph.add_node("increment_pass", increment_pass_counter)
     graph.add_node("logger", logger)
     
-    # Simple linear flow
+    # Simple flow with convergence
     graph.set_entry_point("topic_intake")
     graph.add_edge("topic_intake", "draft_writer")
     graph.add_edge("draft_writer", "evaluate_all")
-    graph.add_edge("evaluate_all", "logger")
+    graph.add_edge("evaluate_all", "increment_pass")
+    graph.add_edge("increment_pass", "convergence_check")
+    
+    # Conditional routing
+    graph.add_conditional_edges(
+        "convergence_check",
+        route_convergence_decision,
+        {
+            "continue": "evaluate_all",
+            "end": "logger"
+        }
+    )
+    
     graph.add_edge("logger", END)
     
     return graph.compile()

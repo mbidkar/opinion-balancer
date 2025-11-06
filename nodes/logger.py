@@ -63,7 +63,36 @@ def save_pass_log(state: GraphState, run_dir: str) -> None:
             'metrics': convert_numpy_types(pass_log.metrics.dict()),
             'word_count': len(pass_log.draft.split()) if pass_log.draft else 0
         }
-        json.dump(pass_data, f, indent=2)
+        json.dump(pass_data, f, indent=2, default=str)
+    
+    # Save individual draft text file for easy reading
+    draft_file = os.path.join(run_dir, f"draft_pass_{state.pass_count:02d}.txt")
+    with open(draft_file, 'w', encoding='utf-8') as f:
+        f.write(f"# OpinionBalancer Draft - Pass {state.pass_count}\n")
+        f.write(f"Topic: {state.topic}\n")
+        f.write(f"Timestamp: {pass_log.timestamp.isoformat()}\n")
+        f.write(f"Word Count: {len(pass_log.draft.split()) if pass_log.draft else 0}\n")
+        f.write(f"Target Distribution: {state.target_distribution}\n")
+        f.write("\n" + "="*50 + "\n\n")
+        f.write(pass_log.draft if pass_log.draft else "No draft content available")
+        f.write("\n")
+    
+    # Save individual critique text file for easy reading
+    if pass_log.critique:
+        critique_file = os.path.join(run_dir, f"critique_pass_{state.pass_count:02d}.txt")
+        with open(critique_file, 'w', encoding='utf-8') as f:
+            f.write(f"# OpinionBalancer Critique - Pass {state.pass_count}\n")
+            f.write(f"Topic: {state.topic}\n")
+            f.write(f"Timestamp: {pass_log.timestamp.isoformat()}\n")
+            f.write(f"Metrics Summary:\n")
+            if state.metrics:
+                f.write(f"  - Bias Delta: {state.metrics.bias_delta:.3f}\n")
+                f.write(f"  - Frame Entropy: {state.metrics.frame_entropy:.3f}\n")
+                f.write(f"  - Readability: FK={state.metrics.flesch_kincaid:.1f}, DC={state.metrics.dale_chall:.1f}\n")
+                f.write(f"  - Coherence: {state.metrics.coherence_score:.3f}\n")
+            f.write("\n" + "="*50 + "\n\n")
+            f.write(pass_log.critique)
+            f.write("\n")
 
 
 def save_metrics_csv(state: GraphState, run_dir: str) -> None:
@@ -127,7 +156,7 @@ def save_final_artifacts(state: GraphState, run_dir: str) -> None:
                 'draft_length': len(log_entry.draft.split()) if log_entry.draft else 0,
                 'critique_length': len(log_entry.critique.split()) if log_entry.critique else 0
             }
-            f.write(json.dumps(json_line) + '\n')
+            f.write(json.dumps(json_line, default=str) + '\n')
 
 
 def create_run_summary(state: GraphState) -> Dict[str, Any]:
