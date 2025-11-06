@@ -1,11 +1,11 @@
 """
 Editor Node
-Applies edit instructions to improve the draft using Ollama LLM
+Applies edit instructions to improve the draft using OpenAI API
 """
 
 import yaml
 from state import GraphState
-from llm_client import make_llm_client
+from llm_client_openai import OpenAILLMClient
 
 
 def load_prompts(config_path: str = "prompts.yaml") -> dict:
@@ -56,11 +56,11 @@ def editor(state: GraphState) -> GraphState:
         
         # Load prompts and LLM client
         prompts = load_prompts()
-        llm_client = make_llm_client()
+        llm_client = OpenAILLMClient(model="gpt-5", temperature=0.7, max_completion_tokens=1000)
         
         # Test LLM connection
         if not llm_client.test_connection():
-            print("❌ Cannot connect to Ollama for editing")
+            print("❌ Cannot connect to OpenAI API for editing")
             # Return original draft if can't edit
             return state
         
@@ -72,7 +72,6 @@ def editor(state: GraphState) -> GraphState:
         # Generate edited draft
         edited_draft = llm_client.generate(
             prompt=prompt,
-            role="editor",
             system_message="You are an expert editor focused on applying specific edits while maintaining quality and balance."
         )
         

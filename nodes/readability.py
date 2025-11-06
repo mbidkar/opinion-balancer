@@ -24,7 +24,7 @@ def readability(state: GraphState) -> GraphState:
     
     try:
         # Compute readability metrics
-        flesch_kincaid = textstat.flesch_kincaid().flesch_kincaid_grade(state.draft)
+        flesch_kincaid = textstat.flesch_kincaid_grade(state.draft)
         dale_chall = textstat.dale_chall_readability_score(state.draft)
         
         # Initialize metrics if not present
@@ -76,7 +76,7 @@ def readability(state: GraphState) -> GraphState:
 def analyze_readability_detailed(text: str) -> Dict[str, float]:
     """Extended readability analysis for development/debugging"""
     return {
-        'flesch_kincaid_grade': textstat.flesch_kincaid().flesch_kincaid_grade(text),
+        'flesch_kincaid_grade': textstat.flesch_kincaid_grade(text),
         'flesch_reading_ease': textstat.flesch_reading_ease(text),
         'dale_chall': textstat.dale_chall_readability_score(text),
         'gunning_fog': textstat.gunning_fog(text),

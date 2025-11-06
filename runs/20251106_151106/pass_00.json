@@ -1,0 +1,29 @@
+{
+  "pass_id": 0,
+  "timestamp": "2025-11-06T15:11:06.154806",
+  "draft": "The topic of universal basic income in the united states. presents multiple perspectives worth considering.\n\nFrom one viewpoint, supporters argue that this approach offers significant benefits including improved outcomes and greater efficiency. They point to evidence suggesting positive impacts on stakeholders and alignment with important values.\n\nHowever, critics raise valid concerns about potential drawbacks and unintended consequences. They emphasize the importance of considering alternative approaches and question whether the proposed benefits outweigh the costs.\n\nA more moderate perspective suggests that the reality likely lies somewhere between these positions. Both sides make valid points that deserve careful consideration.\n\nThe complexity of this issue means that simple solutions are unlikely to address all concerns. Moving forward will require thoughtful dialogue, evidence-based analysis, and willingness to find common ground among different viewpoints.\n\nUltimately, the best path forward may involve elements from multiple perspectives, adapted to specific circumstances and community needs.",
+  "critique": "1. [Overall]: Reduce Center bias by balancing arguments. Current distribution: {'Left': 0.030303030303030307, 'Right': 0.030303030303030307, 'Center': 0.9393939393939394}, Target: {'Left': 0.5, 'Right': 0.5}\n4. [Transitions]: Improve paragraph connections and logical flow. Current coherence: 0.311",
+  "metrics": {
+    "bias_probs": {
+      "Left": 0.030303030303030307,
+      "Right": 0.030303030303030307,
+      "Center": 0.9393939393939394
+    },
+    "bias_target": {
+      "Left": 0.5,
+      "Right": 0.5
+    },
+    "bias_delta": 0.46969696969696967,
+    "frame_distribution": {
+      "moral": 0.3333333333333333,
+      "economic": 0.3333333333333333,
+      "policy": 0.0,
+      "conflict": 0.0,
+      "human_interest": 0.3333333333333333,
+      "consequence": 0.0,
+      "attribution": 0.0
+    },
+    "frame_entropy": 1.584962500721156,
+    "flesch_kincaid": 12.0,
+    "dale_chall": 8.0,
+    "coherence_score": 

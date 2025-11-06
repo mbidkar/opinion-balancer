@@ -1,8 +1,8 @@
 # OpinionBalancer
 
-**A local, multi-agent writing system for balanced opinion pieces**
+**A multi-agent writing system for balanced opinion pieces powered by GPT-5**
 
-OpinionBalancer is a KB-free, deterministic system built with LangGraph that automatically drafts and refines balanced opinion pieces using GPT-2. Designed to run locally on PACE-ICE cluster or personal machines with minimal dependencies.
+OpinionBalancer is a KB-free, deterministic system built with LangGraph that automatically drafts and refines balanced opinion pieces using OpenAI's GPT-5. Designed for high-quality, nuanced opinion generation with built-in bias detection and balance optimization.
 
 ## 🎯 What It Does
 
@@ -17,48 +17,46 @@ The system takes a topic and produces balanced opinion articles through a struct
 
 ## 🔧 Key Features
 
-- **🏠 100% Local**: Runs entirely locally using GPT-2 (355M parameter model)
+- **🤖 GPT-5 Powered**: Uses OpenAI's latest GPT-5 model for superior text generation
 - **⚖️ Bias Detection**: Quantifies and balances political stance
 - **🖼️ Frame Diversity**: Ensures multiple perspective types (moral, economic, policy, etc.)
 - **📖 Readability Control**: Targets specific grade levels (10-13)
 - **🔗 Coherence Scoring**: Maintains logical flow between paragraphs
 - **📊 Deterministic Metrics**: All evaluations are measurable and reproducible
-- **�️ PACE-ICE Ready**: Optimized for Georgia Tech's computing cluster
-- **🚫 No External APIs**: No internet or external services required
+- **🌐 API-Based**: Leverages OpenAI's powerful infrastructure
+- **� Single-Pass**: Linear workflow for consistent, predictable results
 
 ## 🚀 Quick Start
 
-### 1. PACE-ICE Setup
+### 1. Setup
 
 ```bash
 # Clone repository
 git clone https://github.com/mbidkar/opinion-balancer.git
 cd opinion-balancer
 
-# Run setup script
-chmod +x setup.sh
-./setup.sh
+# Install dependencies
+pip install -r requirements-simple.txt
 
-# Activate environment
-source activate.sh
+# Set up environment variables
+cp .env.example .env
+# Edit .env and add your OPENAI_API_KEY
 ```
 
-### 2. Local Setup
+### 2. Configuration
 
+Add your OpenAI API key to the `.env` file:
 ```bash
-# Create environment
-conda env create -f environment.yml
-conda activate opinion-balancer
-
-# Test installation
-python test_gpt2.py
+OPENAI_API_KEY=your_openai_api_key_here
+LANGSMITH_API_KEY=your_langsmith_key_here  # Optional
+LANGSMITH_TRACING=true  # Optional
 ```
 
 ### 3. Basic Usage
 
 ```bash
-# Test GPT-2 client
-python test_gpt2.py
+# Test OpenAI connection
+python test_openai.py
 
 # Start LangGraph development server
 langgraph dev
@@ -103,6 +101,7 @@ langgraph dev
 ## ⚙️ Fixed Configuration
 
 OpinionBalancer uses fixed settings to ensure consistent results:
+- **Model**: GPT-5 (OpenAI's latest)
 - **Length**: Maximum 500 words
 - **Target Balance**: 50% Left, 50% Right 
 - **Audience**: General US reader
@@ -113,7 +112,7 @@ OpinionBalancer uses fixed settings to ensure consistent results:
 
 ### Core Components
 
-1. **LLM Client** (`llm_client_gpt2.py`) - GPT-2 interface with GPU/CPU auto-detection
+1. **LLM Client** (`llm_client_openai.py`) - OpenAI GPT-5 interface with API management
 2. **State Management** (`state.py`) - Pydantic models for workflow state
 3. **LangGraph Workflow** (`graphs/kb_free.py`) - Multi-agent orchestration
 4. **Evaluation Nodes** (`nodes/`) - Bias, frame, readability, coherence analysis
@@ -121,25 +120,24 @@ OpinionBalancer uses fixed settings to ensure consistent results:
 
 ### Model Configuration
 
-- **Model**: GPT-2 Medium (355M parameters)
-- **Location**: `/storage/data/mod-huggingface-0/gpt2-medium` (PACE-ICE)
-- **Fallback**: Online GPT-2 via Hugging Face Hub
-- **Device**: Auto-detection (CUDA if available, else CPU)
+- **Model**: GPT-5 (OpenAI API)
+- **API**: Requires OPENAI_API_KEY environment variable
+- **Fallback**: GPT-4 or GPT-3.5-turbo (configurable)
+- **Temperature**: Task-specific (0.6-0.8 range)
 
 ## 📁 Files Overview
 
 ```
 opinion-balancer/
-├── setup.sh              # Main setup script for PACE-ICE
-├── activate.sh            # Environment activation helper
-├── environment.yml        # Conda environment specification
-├── requirements-simple.txt # Python package dependencies
-├── test_gpt2.py          # GPT-2 client test script
-├── llm_client_gpt2.py    # GPT-2 LLM client implementation
+├── .env                  # Environment variables (API keys)
+├── requirements-simple.txt # Python package dependencies (OpenAI focus)
+├── environment.yml       # Conda environment (simplified)
+├── test_openai.py        # OpenAI API test script
+├── llm_client_openai.py  # OpenAI API client implementation
 ├── langgraph.json        # LangGraph configuration
 ├── run.py                # Main CLI interface
 ├── state.py              # Pydantic state models
-├── config.yaml           # System configuration
+├── config.yaml           # System configuration (GPT-5 settings)
 ├── prompts.yaml          # LLM prompts
 ├── graphs/
 │   └── kb_free.py        # LangGraph workflow definition
@@ -151,8 +149,8 @@ opinion-balancer/
 ## 🧪 Testing
 
 ```bash
-# Test GPT-2 client
-python test_gpt2.py
+# Test OpenAI API connectivity
+python test_openai.py
 
 # Test LangGraph setup
 langgraph dev
@@ -164,7 +162,7 @@ python run.py --test
 ## 🔧 Configuration
 
 Edit `config.yaml` to customize:
-- Model paths and parameters
+- Model parameters and API settings
 - Evaluation thresholds
 - Target bias distributions
 - Output formatting

@@ -16,14 +16,17 @@ logging:
   log_level: INFO
 
 models:
-  provider: gpt2
-  model_path: /storage/data/mod-huggingface-0/openai-community__gpt2-medium/models--openai-community--gpt2-medium/snapshots/6dcaa7a952f72f9298047fd5137cd6e4f0
+  provider: openai
+  model: gpt-5
   temperatures:
     writer: 0.8
     critic: 0.6
     editor: 0.7
-  max_tokens: 400
-  device: auto
+  max_completion_tokens: 1000
+  system_messages:
+    writer: "You are an expert opinion writer who creates balanced, well-structured articles."
+    critic: "You are a critical editor who identifies areas for improvement in writing."
+    editor: "You are a skilled editor who improves articles while maintaining their core message."
   
 # Default topic intake settings
 defaults:

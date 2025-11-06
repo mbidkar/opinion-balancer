@@ -1,11 +1,11 @@
 """
 Draft Writer Node
-Uses Ollama LLM to generate balanced opinion drafts
+Uses OpenAI API to generate balanced opinion drafts
 """
 
 import yaml
 from state import GraphState
-from llm_client import make_llm_client
+from llm_client_openai import OpenAILLMClient
 
 
 def load_prompts(config_path: str = "prompts.yaml") -> dict:
@@ -73,11 +73,11 @@ def draft_writer(state: GraphState) -> GraphState:
         
         # Load prompts and LLM client
         prompts = load_prompts()
-        llm_client = make_llm_client()
+        llm_client = OpenAILLMClient(model="gpt-5", temperature=0.8, max_completion_tokens=1000)
         
         # Test LLM connection
         if not llm_client.test_connection():
-            print("❌ Cannot connect to Ollama. Make sure it's running with: ollama serve")
+            print("❌ Cannot connect to OpenAI API. Check your API key and internet connection.")
             # Provide a fallback draft
             state.draft = create_fallback_draft(state)
             return state
@@ -90,7 +90,6 @@ def draft_writer(state: GraphState) -> GraphState:
         # Generate the draft
         draft = llm_client.generate(
             prompt=prompt,
-            role="writer",
             system_message="You are an expert opinion writer focused on balanced, fair reporting."
         )
         

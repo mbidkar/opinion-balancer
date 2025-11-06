@@ -6,9 +6,25 @@ Persists metrics, drafts, and artifacts for each pass
 import os
 import json
 import csv
+import numpy as np
 from datetime import datetime
 from typing import Dict, Any
 from state import GraphState, PassLog
+
+
+def convert_numpy_types(obj):
+    """Convert numpy types to Python native types for JSON serialization"""
+    if isinstance(obj, np.floating):
+        return float(obj)
+    elif isinstance(obj, np.integer):
+        return int(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif isinstance(obj, dict):
+        return {key: convert_numpy_types(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_numpy_types(item) for item in obj]
+    return obj
 
 
 def create_output_directory(base_dir: str = "./runs") -> str:
@@ -39,14 +55,15 @@ def save_pass_log(state: GraphState, run_dir: str) -> None:
     # Save individual pass file
     pass_file = os.path.join(run_dir, f"pass_{state.pass_count:02d}.json")
     with open(pass_file, 'w') as f:
-        json.dump({
+        pass_data = {
             'pass_id': pass_log.pass_id,
             'timestamp': pass_log.timestamp.isoformat(),
             'draft': pass_log.draft,
             'critique': pass_log.critique,
-            'metrics': pass_log.metrics.dict(),
+            'metrics': convert_numpy_types(pass_log.metrics.dict()),
             'word_count': len(pass_log.draft.split()) if pass_log.draft else 0
-        }, f, indent=2)
+        }
+        json.dump(pass_data, f, indent=2)
 
 
 def save_metrics_csv(state: GraphState, run_dir: str) -> None:
@@ -97,7 +114,7 @@ def save_final_artifacts(state: GraphState, run_dir: str) -> None:
     summary = create_run_summary(state)
     summary_file = os.path.join(run_dir, "run_summary.json")
     with open(summary_file, 'w') as f:
-        json.dump(summary, f, indent=2, default=str)
+        json.dump(convert_numpy_types(summary), f, indent=2, default=str)
     
     # Complete history as JSONL
     jsonl_file = os.path.join(run_dir, "complete_history.jsonl")
@@ -128,7 +145,7 @@ def create_run_summary(state: GraphState) -> Dict[str, Any]:
             'converged': state.converged
         },
         'constraints': state.constraints,
-        'final_metrics': state.metrics.dict() if state.metrics else None,
+        'final_metrics': convert_numpy_types(state.metrics.dict()) if state.metrics else None,
         'final_draft_stats': {
             'word_count': len(state.draft.split()) if state.draft else 0,
             'paragraph_count': len([p for p in state.draft.split('\n\n') if p.strip()]) if state.draft else 0,

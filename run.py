@@ -83,8 +83,8 @@ def check_prerequisites() -> bool:
     
     # Check LLM connection (GPT-2 or Ollama)
     try:
-        from llm_client import make_llm_client
-        llm_client = make_llm_client()
+        from llm_client_openai import OpenAILLMClient
+        llm_client = OpenAILLMClient(model="gpt-5")
         
         if not llm_client.test_connection():
             print("❌ Cannot connect to LLM")

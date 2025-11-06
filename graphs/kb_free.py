@@ -134,7 +134,14 @@ def run_opinion_balancer(
     
     try:
         # Execute the workflow
-        final_state = graph.invoke(initial_state)
+        result = graph.invoke(initial_state)
+        
+        # LangGraph sometimes returns a dict, ensure we have a GraphState
+        if isinstance(result, dict):
+            # Extract the state data and create a new GraphState
+            final_state = GraphState(**result)
+        else:
+            final_state = result
         
         print("\n🎉 OpinionBalancer Complete!")
         return final_state

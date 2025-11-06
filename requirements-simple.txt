@@ -1,32 +1,24 @@
-# OpinionBalancer Core Dependencies
-# Minimal, ordered installation for reliability
+# OpinionBalancer Dependencies (OpenAI Edition)
+# Clean, minimal installation for OpenAI API usage
 
-# Core Python packages (install first)
+# Core Python packages
 requests>=2.31
 pyyaml>=6.0
 click>=8.1
-
-# Scientific computing stack
-numpy>=1.24
-scipy>=1.10
-scikit-learn>=1.3
+python-dotenv>=1.0
 
 # Data handling
 pandas>=2.0
 textstat>=0.7
 nltk>=3.8
+numpy>=1.24
+scipy>=1.10
+scikit-learn>=1.3
 
-# ML/NLP core
-transformers>=4.30
-tokenizers>=0.13
-huggingface-hub>=0.16
+# OpenAI API
+openai>=1.0
 
-# PyTorch (CPU-only, lightweight)
-torch>=2.0 --index-url https://download.pytorch.org/whl/cpu
-torchvision --index-url https://download.pytorch.org/whl/cpu
-torchaudio --index-url https://download.pytorch.org/whl/cpu
-
-# Additional ML packages
+# Additional ML packages (lightweight)
 sentence-transformers>=2.2
 joblib>=1.3
 
@@ -39,6 +31,7 @@ pydantic-core>=2.10
 langchain-core>=0.1
 langchain>=0.1
 langgraph>=0.1
+langchain-openai>=0.1
 
 # Development tools
 rich>=13.0
