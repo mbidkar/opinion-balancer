@@ -1,0 +1,45 @@
+# OpinionBalancer Core Dependencies
+# Minimal, ordered installation for reliability
+
+# Core Python packages (install first)
+requests>=2.31
+pyyaml>=6.0
+click>=8.1
+
+# Scientific computing stack
+numpy>=1.24
+scipy>=1.10
+scikit-learn>=1.3
+
+# Data handling
+pandas>=2.0
+textstat>=0.7
+nltk>=3.8
+
+# ML/NLP core
+transformers>=4.30
+tokenizers>=0.13
+huggingface-hub>=0.16
+
+# PyTorch (CPU-only, lightweight)
+torch>=2.0 --index-url https://download.pytorch.org/whl/cpu
+torchvision --index-url https://download.pytorch.org/whl/cpu
+torchaudio --index-url https://download.pytorch.org/whl/cpu
+
+# Additional ML packages
+sentence-transformers>=2.2
+joblib>=1.3
+
+# Pydantic and dependencies
+typing-extensions>=4.5
+pydantic>=2.5
+pydantic-core>=2.10
+
+# LangChain stack
+langchain-core>=0.1
+langchain>=0.1
+langgraph>=0.1
+
+# Development tools
+rich>=13.0
+langgraph-cli>=0.1
